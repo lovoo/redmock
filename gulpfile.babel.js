@@ -8,6 +8,7 @@ import mocha from 'gulp-mocha';
 import jscs from 'gulp-jscs';
 import stylish from 'gulp-jscs-stylish';
 import jshint from 'gulp-jshint';
+import coveralls from 'gulp-coveralls';
 
 const isparta = require('isparta');
 
@@ -76,5 +77,12 @@ gulp.task('unitTest', [ 'instrument' ], () => {
     .pipe(istanbul.writeReports({dir:'./coverage/unit'}))
     .pipe(istanbul.enforceThresholds(thresholds));
 });
+
+gulp.task('coveralls', [ 'unitTest' ], () => {
+  return gulp.src('./coverage/unit/lcov.info')
+    .pipe(coveralls());
+});
+
+gulp.task('travisTest', [ 'coveralls' ]);
 
 gulp.task('default', [ 'unitTest' ]);
