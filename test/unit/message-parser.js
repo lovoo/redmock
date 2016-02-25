@@ -50,6 +50,17 @@ describe('MessageParser', () => {
       msg.value.should.equal('OK');
     });
 
+    it('should parse bulk string', () => {
+      let data = new Buffer('$10\r\nbulkstring\r\n');
+      let msg = messageParser.parse(data);
+    });
+
+    it('should parse array', () => {
+      let data = new Buffer('*3\r\n$8\r\nsentinel\r\n$23\r\nget-master-addr-by-name\r\n$8\r\nmymaster\r\n');
+      let msg = messageParser.parse(data);
+      console.log(msg);
+    });
+
   });
 
 });

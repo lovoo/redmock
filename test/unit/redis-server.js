@@ -12,16 +12,52 @@ describe('RedisServer', () => {
     redisServer = new RedisServer();
   });
 
+  afterEach((done) => {
+    redisServer.stop().then((res) => {
+      done();
+    });
+  });
+
   describe('#constructor()', () => {
 
     it('should construct new instance with default opts', () => {
       let instance = new RedisServer();
       instance.opts.port.should.equal(6379);
+      instance.opts.sentinelPort.should.equal(26379);
     });
 
     it('should construct new instance with specific opts', () => {
-      let instance = new RedisServer({port:666});
+      let instance = new RedisServer({port:666, sentinelPort:777});
       instance.opts.port.should.equal(666);
+      instance.opts.sentinelPort.should.equal(777);
+    });
+
+  });
+
+  describe('#start()', () => {
+
+    it('should fail to start due to listen error', () => {
+      // This should fail because a normal user can not listen on low
+      // numbered ports.
+      redisServer.opts.port = 1;
+      return redisServer.start().should.be.rejectedWith(/EACCES/);
+    });
+
+    it('should fail to start due to sentinel listen error', () => {
+      // This should fail because a normal user can not listen on low
+      // numbered ports.
+      redisServer.opts.sentinelPort = 1;
+      return redisServer.start().should.be.rejectedWith(/EACCES/);
+    });
+
+    it('should succeed', (done) => {
+      redisServer.start().then((res) => {
+        redisServer.server.listening.should.equal(true);
+        redisServer.sentinelServer.listening.should.equal(true);
+        done();
+      }).catch((err) => {
+        done(err);
+      });
     });
 
   });

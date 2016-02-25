@@ -54,6 +54,14 @@ export default class MessageParser {
         res = this._parseSimpleString(data);
         break;
       }
+      case MessageParser.BULK_STRING: {
+        res = this._parseBulkString(data);
+        break;
+      }
+      case MessageParser.ARRAY: {
+        res = this._parseArray(data);
+        break;
+      }
       default: {
         break;
       }
@@ -72,8 +80,43 @@ export default class MessageParser {
     };
   }
 
+  /**
+   * Parse a bulk string.
+   */
+  _parseBulkString(data) {
+    let lines = data.toString().split('\r\n');
+    // Line 1 is the length of the string
+    console.log(lines);
+  }
+
+  /**
+   * Parse an array.
+   */
+  _parseArray(data) {
+    let lines = data.toString().split('\r\n');
+    console.log(lines);
+    // Line 1 is the number of elements in the array
+    let numElements = lines[0].substring(1);
+    console.log('Num elements:', numElements);
+    //let numElements = data.slice(1, data.length - 2).toString();
+    //console.log(numElements);
+    return {
+      type: MessageParser.ARRAY,
+      value: [
+      ]
+    };
+  }
+
   static get SIMPLE_STRING() {
     return '+';
+  }
+
+  static get BULK_STRING() {
+    return '$';
+  }
+
+  static get ARRAY() {
+    return '*';
   }
 
 }
