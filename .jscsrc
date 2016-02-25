@@ -1,0 +1,22 @@
+{
+  "validateIndentation": 2,
+  "validateQuoteMarks": "'",
+  "validateParameterSeparator": ", ",
+  "requireSemicolons": true,
+  "requirePaddingNewLinesInObjects": true,
+  "requirePaddingNewLinesAfterUseStrict": true,
+  "requireCurlyBraces": [
+    "if",
+    "else",
+    "for",
+    "while",
+    "do",
+    "try",
+    "catch",
+    "case",
+    "default"
+  ],
+  "requireCamelCaseOrUpperCaseIdentifiers": true,
+  "requireArrowFunctions": false,
+  "disallowNewlineBeforeBlockStatements": true
+}
