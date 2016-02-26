@@ -38,7 +38,6 @@ export default class MessageParser {
 
     // Determine message type
     let res = this._determineTypeAndParse(data);
-    console.log(res);
 
     return res;
   }
@@ -86,25 +85,60 @@ export default class MessageParser {
   _parseBulkString(data) {
     let lines = data.toString().split('\r\n');
     // Line 1 is the length of the string
-    console.log(lines);
+    let len = parseInt(lines[0].substring(1));
+    if (len != lines[1].length) {
+      return null;
+    }
+    return {
+      type: MessageParser.BULK_STRING,
+      value: lines[1],
+      length: len
+    };
   }
 
   /**
-   * Parse an array.
+   * Parse an array. Damn ugly.
    */
   _parseArray(data) {
-    let lines = data.toString().split('\r\n');
-    console.log(lines);
-    // Line 1 is the number of elements in the array
-    let numElements = lines[0].substring(1);
-    console.log('Num elements:', numElements);
-    //let numElements = data.slice(1, data.length - 2).toString();
-    //console.log(numElements);
-    return {
+    let elementsProcessed = 0;
+    let unknownType = false;
+    let dataString = data.toString();
+    let firstLine = dataString.split('\r\n', 1);
+    let numElements = parseInt(firstLine[0].substring(1));
+
+    let startOfElements = data.toString().indexOf('\r\n') + 2;
+    dataString = dataString.substring(startOfElements);
+
+    let res = {
       type: MessageParser.ARRAY,
+      length: numElements,
       value: [
       ]
     };
+
+    while (elementsProcessed < numElements && unknownType === false) {
+      switch(dataString[0]) {
+        case MessageParser.BULK_STRING: {
+          let idx = this._getPosition(dataString, '\r\n', 2);
+          let msg = this._parseBulkString(dataString.substring(0, idx + 2));
+          dataString = dataString.substring(idx + 2);
+          elementsProcessed += 1;
+          res.value.push(msg);
+          break;
+        }
+        default: {
+          unknownType = true;
+          res = null;
+          break;
+        }
+      }
+    }
+
+    return res;
+  }
+
+  _getPosition(str, m, i) {
+    return str.split(m, i).join(m).length;
   }
 
   static get SIMPLE_STRING() {

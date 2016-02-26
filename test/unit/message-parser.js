@@ -50,15 +50,37 @@ describe('MessageParser', () => {
       msg.value.should.equal('OK');
     });
 
+    it('should fail to parse bulk string due to invalid length', () => {
+      let data = new Buffer('$20\r\nbulkstring\r\n');
+      let msg = messageParser.parse(data);
+      should.not.exist(msg);
+    });
+
     it('should parse bulk string', () => {
       let data = new Buffer('$10\r\nbulkstring\r\n');
       let msg = messageParser.parse(data);
+      should.exist(msg);
+      msg.type.should.equal('$');
+      msg.length.should.equal(10);
+      msg.value.should.equal('bulkstring');
+    });
+
+    it('should fail to parse array due to uknown type', () => {
+      let data = new Buffer('*3\r\n$8\r\nsentinel\r\n$23\r\nget-master-addr-by-name\r\n^8\r\nmymaster\r\n');
+      let msg = messageParser.parse(data);
+      should.not.exist(msg);
     });
 
     it('should parse array', () => {
       let data = new Buffer('*3\r\n$8\r\nsentinel\r\n$23\r\nget-master-addr-by-name\r\n$8\r\nmymaster\r\n');
       let msg = messageParser.parse(data);
-      console.log(msg);
+      should.exist(msg);
+      msg.type.should.equal('*');
+      msg.length.should.equal(3);
+      msg.value.length.should.equal(3);
+      msg.value[0].type.should.equal('$');
+      msg.value[0].length.should.equal(8);
+      msg.value[0].value.should.equal('sentinel');
     });
 
   });
