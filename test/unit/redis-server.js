@@ -1,18 +1,26 @@
 'use strict';
 
 import RedisServer from '../../src/redis-server';
+import stream from 'stream';
+import sinon from 'sinon';
 
 require('../common');
 
 describe('RedisServer', () => {
 
-  let redisServer;
+  let redisServer, processSentinelCommand, processCommand;
 
   beforeEach(() => {
     redisServer = new RedisServer();
+    processSentinelCommand = sinon.stub(redisServer.sentinelCommandProcessor, 'process', (msg, socket) => {
+    });
+    processCommand = sinon.stub(redisServer.commandProcessor, 'process', (msg, socket) => {
+    });
   });
 
   afterEach((done) => {
+    processSentinelCommand.restore();
+    processCommand.restore();
     redisServer.stop().then((res) => {
       done();
     });
@@ -58,6 +66,42 @@ describe('RedisServer', () => {
       }).catch((err) => {
         done(err);
       });
+    });
+
+  });
+
+  describe('#stop()', () => {
+
+    beforeEach((done) => {
+      redisServer.start().then((res) => {
+        redisServer.connections.push({destroy: function(){}});
+        redisServer.sentinelConnections.push({destroy: function(){}});
+        done();
+      });
+    });
+
+    it('should succeed', () => {
+      return redisServer.stop().should.be.fulfilled;
+    });
+
+  });
+
+  describe('#handleNewConnection()', () => {
+
+    it('should handle connection', () => {
+      let socket = new stream.PassThrough();
+      redisServer.handleNewConnection(socket);
+      socket.write('data');
+    });
+
+  });
+
+  describe('#handleSentinelConnection()', () => {
+
+    it('should handle connection', () => {
+      let socket = new stream.PassThrough();
+      redisServer.handleSentinelConnection(socket);
+      socket.write('data');
     });
 
   });

@@ -64,7 +64,7 @@ gulp.task('instrument', [ 'build' ], () => {
 gulp.task('unitTest', [ 'instrument' ], () => {
   let mochaOpts = {
     reporter: 'spec',
-    bail: watching
+    bail: !watching
   };
   let thresholds = {
     thresholds: {

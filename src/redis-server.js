@@ -2,6 +2,10 @@
 
 import net from 'net';
 import MessageParser from './message-parser';
+import CommandProcessor from './command-processor';
+import SentinelCommandProcessor from './sentinel-command-processor';
+
+const debug = require('debug')('redmock:redis-server');
 
 const defaultOpts = {
   port: 6379,
@@ -24,6 +28,10 @@ export default class RedisServer {
     };
     this.opts = opts;
     this.messageParser = new MessageParser();
+    this.commandProcessor = new CommandProcessor();
+    this.sentinelCommandProcessor = new SentinelCommandProcessor(this.opts.port);
+    this.connections = [ ];
+    this.sentinelConnections = [ ];
   }
 
   /**
@@ -31,7 +39,7 @@ export default class RedisServer {
    */
   start() {
     return new Promise((resolve, reject) => {
-      this.server = net.createServer(this.handleNewConnection);
+      this.server = net.createServer(this.handleNewConnection.bind(this));
 
       // Handle an error from listen
       this.server.once('error', (err) => {
@@ -44,8 +52,7 @@ export default class RedisServer {
         this.server.removeAllListeners('error');
 
         // Now let's start a sentinel server
-        //this.sentinelServer = net.createServer(this.handleSentinelConnection.bind(this));
-        this.sentinelServer = net.createServer(null);
+        this.sentinelServer = net.createServer(this.handleSentinelConnection.bind(this));
 
         // Handle an error from listen
         this.sentinelServer.once('error', (err) => {
@@ -56,6 +63,7 @@ export default class RedisServer {
         // We are listening
         this.sentinelServer.once('listening', () => {
           this.sentinelServer.removeAllListeners('error');
+          debug('Server started');
           resolve(true);
         });
 
@@ -72,6 +80,13 @@ export default class RedisServer {
   stop() {
     return new Promise((resolve, reject) => {
       if (this.server) {
+        debug('Stopping server');
+        for (let connection of this.connections) {
+          connection.destroy();
+        }
+        for (let connection of this.sentinelConnections) {
+          connection.destroy();
+        }
         this.server.close((err) => {
           if (this.sentinelServer) {
             this.sentinelServer.close((err) => {
@@ -84,6 +99,33 @@ export default class RedisServer {
       } else {
         resolve(true);
       }
+    });
+  }
+
+  /**
+   * Handle new connetion.
+   */
+  handleNewConnection(socket) {
+    debug('New redis connection from: ' + socket.remoteAddress + ':' + socket.remotePort);
+    socket.database = '0';
+    this.connections.push(socket);
+    socket.on('data', (data) => {
+      let commands = this.messageParser.getCommands(data);
+      for (let command of commands) {
+        debug('Command is', command);
+        this.commandProcessor.process(this.messageParser.parse(command), socket);
+      }
+    });
+  }
+
+  /**
+   * Handle sentinel connection.
+   */
+  handleSentinelConnection(socket) {
+    debug('New sentinel connection from: ' + socket.remoteAddress + ':' + socket.remotePort);
+    this.sentinelConnections.push(socket);
+    socket.on('data', (data) => {
+      this.sentinelCommandProcessor.process(this.messageParser.parse(data), socket);
     });
   }
 

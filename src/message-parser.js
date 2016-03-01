@@ -13,6 +13,48 @@ export default class MessageParser {
   }
 
   /**
+   * Takes a message and converts into a string that can be sent
+   * over the wire.
+   */
+  toString(msg) {
+    let res = null;
+    switch(msg.type) {
+      case MessageParser.ERROR: {
+        res = this._errorToString(msg);
+        break;
+      }
+      case MessageParser.SIMPLE_STRING: {
+        res = this._simpleStringToString(msg);
+        break;
+      }
+      case MessageParser.ARRAY: {
+        res = this._arrayToString(msg);
+        break;
+      }
+      case MessageParser.BULK_STRING: {
+        res = this._bulkStringToString(msg);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+    return res;
+  }
+
+  /**
+   * Get commands from a buffer.
+   */
+  getCommands(data) {
+    let commands = data.toString().match(/[^*]+/g);
+    let res = [ ];
+    for (let command of commands) {
+      res.push(new Buffer('*' + command));
+    }
+    return res;
+  }
+
+  /**
    * Parse a buffer.
    * @param {Buffer} data - The buffer.
    */
@@ -31,7 +73,7 @@ export default class MessageParser {
       return null;
     }
 
-    // Make sure message ends wit \r\n
+    // Make sure message ends with \r\n
     if (data[data.length - 1] != 10 || data[data.length - 2] != 13) {
       return null;
     }
@@ -43,12 +85,62 @@ export default class MessageParser {
   }
 
   /**
+   * Convert an error into a string.
+   */
+  _errorToString(msg) {
+    let res = '';
+    res += '-' + msg.value + '\r\n';
+    return res;
+  }
+
+  /**
+   * Convert a simple string into a string.
+   */
+  _simpleStringToString(msg) {
+    let res = '';
+    res += '+' + msg.value + '\r\n';
+    return res;
+  }
+
+  /**
+   * Convert a bulk string into a string.
+   */
+  _bulkStringToString(msg) {
+    let res = '';
+    // Length
+    res += '$' + msg.length;
+    if (msg.length <= 0) {
+      res += '\r\n';
+    } else {
+      res += '\r\n' + msg.value + '\r\n';
+    }
+    return res;
+  }
+
+  /**
+   * Convert an array message into a string.
+   */
+  _arrayToString(msg) {
+    let res = '';
+    // Length
+    res += '*' + msg.length + '\r\n';
+    for (let val of msg.value) {
+      res += this.toString(val);
+    }
+    return res;
+  }
+
+  /**
    * Determine message type.
    */
   _determineTypeAndParse(data) {
     let res = null;
     let c = String.fromCharCode(data[0]);
     switch (c) {
+      case MessageParser.ERROR: {
+        res = this._parseError(data);
+        break;
+      }
       case MessageParser.SIMPLE_STRING: {
         res = this._parseSimpleString(data);
         break;
@@ -69,6 +161,17 @@ export default class MessageParser {
   }
 
   /**
+   * Parse an error.
+   */
+  _parseError(data) {
+    let string = data.slice(1, data.length - 2).toString();
+    return {
+      type: MessageParser.ERROR,
+      value: string
+    };
+  }
+
+  /**
    * Parse a simple string.
    */
   _parseSimpleString(data) {
@@ -86,12 +189,17 @@ export default class MessageParser {
     let lines = data.toString().split('\r\n');
     // Line 1 is the length of the string
     let len = parseInt(lines[0].substring(1));
-    if (len != lines[1].length) {
+    let value = null;
+    if (len == -1) {
+      value = null;
+    } else if (len != lines[1].length) {
       return null;
+    } else {
+      value = lines[1];
     }
     return {
       type: MessageParser.BULK_STRING,
-      value: lines[1],
+      value: value,
       length: len
     };
   }
@@ -139,6 +247,10 @@ export default class MessageParser {
 
   _getPosition(str, m, i) {
     return str.split(m, i).join(m).length;
+  }
+
+  static get ERROR() {
+    return '-';
   }
 
   static get SIMPLE_STRING() {
