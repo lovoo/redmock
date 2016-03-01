@@ -49,7 +49,19 @@ describe('Database', () => {
       should.not.exist(res);
     });
 
-    it('should succeed', () => {
+    it('should succeed with default ttl', () => {
+      database.data['0'] = {
+        good: {
+          value: 'good',
+          ttl: -1,
+          created: new Date()
+        }
+      }
+      let res = database.getIfNotExpired('good', '0');
+      should.exist(res);
+    });
+
+    it('should succeed with tll set', () => {
       database.data['0'] = {
         good: {
           value: 'good',

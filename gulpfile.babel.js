@@ -78,11 +78,21 @@ gulp.task('unitTest', [ 'instrument' ], () => {
     .pipe(istanbul.enforceThresholds(thresholds));
 });
 
-gulp.task('coveralls', [ 'unitTest' ], () => {
+gulp.task('functionalTest', [ 'unitTest' ], () => {
+  let mochaOpts = {
+    reporter: 'spec',
+    bail: !watching
+  };
+  return gulp.src([ './test/functional/**/*.js' ], {read: false})
+    .pipe(mocha(mochaOpts))
+    .on('error', onError);
+});
+
+gulp.task('coveralls', [ 'functionalTest' ], () => {
   return gulp.src('./coverage/unit/lcov.info')
     .pipe(coveralls());
 });
 
 gulp.task('travisTest', [ 'coveralls' ]);
 
-gulp.task('default', [ 'unitTest' ]);
+gulp.task('default', [ 'functionalTest' ]);

@@ -55,16 +55,20 @@ export default class Database {
    */
   getIfNotExpired(key, db) {
     let data = this.data[db][key];
-    let now = Date.now();
-    let then = data.created.getTime();
-    let elapsed = now - then;
-    let ttl = data.ttl * 1000;
-    debug('TTL in ms ' + ttl);
-    debug(elapsed + ' ms have elapsed since created');
-    if (elapsed > ttl) {
-      debug('Data has expired');
-      delete this.data[db][key];
-      return null;
+    if (data.ttl > 0) {
+      let now = Date.now();
+      let then = data.created.getTime();
+      let elapsed = now - then;
+      let ttl = data.ttl * 1000;
+      debug('TTL in ms ' + ttl);
+      debug(elapsed + ' ms have elapsed since created');
+      if (elapsed > ttl) {
+        debug('Data has expired');
+        delete this.data[db][key];
+        return null;
+      } else {
+        return data;
+      }
     } else {
       return data;
     }
@@ -106,6 +110,7 @@ export default class Database {
         }
       } else if (!opts.notExists && opts.exists) {
         if (!this.data[db][key]){
+          error('Exists set to true, but value does not exist');
           return false;
         } else {
           debug('Setting ' + key + ' in ' + db + ' to %j', data);
