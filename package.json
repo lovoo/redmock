@@ -5,6 +5,7 @@
     "license": "MIT",
     "author": "Scott Guilbeaux <scott@sguilbeaux.com>",
     "bugs": "https://github.com/smokerbag/redmock/issues",
+    "main": "index.js",
     "engines": {
         "node": ">= 5.4.0"
     },
