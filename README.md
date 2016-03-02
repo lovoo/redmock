@@ -44,7 +44,7 @@ redisServer.stop().then((res) => {
 
 ```
 
-# Example test
+## Example test
 
 ```javascript
 // require/import needed crap
