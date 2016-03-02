@@ -3,7 +3,8 @@
     "version": "0.0.1",
     "description": "Mock Redis server for unit testing.",
     "license": "MIT",
-    "author": "Scott Guilbeaux",
+    "author": "Scott Guilbeaux <scott@sguilbeaux.com>",
+    "bugs": "https://github.com/smokerbag/redmock/issues",
     "engines": {
         "node": ">= 5.4.0"
     },
