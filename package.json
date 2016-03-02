@@ -7,7 +7,7 @@
     "bugs": "https://github.com/smokerbag/redmock/issues",
     "main": "index.js",
     "engines": {
-        "node": ">= 5.4.0"
+        "node": ">= 5.7.0"
     },
     "repository": {
         "type": "git",
