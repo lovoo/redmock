@@ -49,6 +49,10 @@ export default class CommandProcessor {
         this._processSelect(msg, socket);
         break;
       }
+      case CommandProcessor.DEL: {
+        this._processDel(msg, socket);
+        break;
+      }
       default: {
         this._processUnknownCommand(socket);
         break;
@@ -83,6 +87,10 @@ export default class CommandProcessor {
                msg.value[0].type == '$' &&
                msg.value[0].value.toUpperCase() == CommandProcessor.SELECT) {
       commandType = CommandProcessor.SELECT;
+    } else if (msg.type == '*' && msg.length >= 2 &&
+               msg.value[0].type == '$' &&
+               msg.value[0].value.toUpperCase() == CommandProcessor.DEL) {
+      commandType = CommandProcessor.DEL;
     }
 
     return commandType;
@@ -262,6 +270,23 @@ export default class CommandProcessor {
     this._processSet(msg, socket);
   }
 
+  _processDel(msg, socket) {
+    let deleted = 0;
+    // Go through all keys and delete them
+    for (let i = 1; i < msg.value.length; i++) {
+      const key = msg.value[i].value;
+      debug('Del', key);
+      if (this.database.del(key, socket.database)) {
+        deleted++;
+      }
+    }
+    let respMsg = {
+      type: ':',
+      value: deleted
+    };
+    this._sendMessage(respMsg, socket);
+  }
+
   static get INFO() {
     return 'INFO';
   }
@@ -282,4 +307,7 @@ export default class CommandProcessor {
     return 'GET';
   }
 
+  static get DEL() {
+    return 'DEL';
+  }
 }

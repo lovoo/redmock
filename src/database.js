@@ -124,4 +124,20 @@ export default class Database {
     }
   }
 
+  /**
+   * Delete a value
+   */
+  del(key, db) {
+    if (!this.data[db]) {
+      error('Unknown database: ' + db);
+      return null;
+    } else {
+      if (this.data[db][key]) {
+        delete this.data[db][key];
+        return true;
+      } else {
+        return false;
+      }
+    }
+  }
 }

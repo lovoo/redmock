@@ -168,8 +168,38 @@ describe('RedisServer', () => {
       return redis.set('exists', 'exists', 'XX').should.eventually.equal(null);
     });
 
-    it('test', () => {
+    it('should support setex', () => {
       return redis.setex('foo', 'bar', 500).should.eventually.equal('OK');
+    });
+  });
+
+  describe('DEL', () => {
+
+    before((done) => {
+      redisServer = new RedisServer();
+      redisServer.start().then((res) => {
+        redis = new Redis();
+        redis.on('connect', () => {
+          done();
+        });
+      }).catch((err) => {
+        done(err);
+      });
+    });
+
+    after((done) => {
+      redis.disconnect();
+      redisServer.stop().then((res) => {
+        done();
+      });
+    });
+
+    it('should delete a single key', () => {
+      return redis.del('foo').should.eventually.equal(0);
+    });
+
+    it('should delete many keys', () => {
+      return redis.del('foo', 'bar', 'baz').should.eventually.equal(0);
     });
   });
 });

@@ -35,6 +35,10 @@ export default class MessageParser {
         res = this._bulkStringToString(msg);
         break;
       }
+      case MessageParser.INTEGER: {
+        res = this._integerToString(msg);
+        break;
+      }
       default: {
         break;
       }
@@ -127,6 +131,15 @@ export default class MessageParser {
     for (let val of msg.value) {
       res += this.toString(val);
     }
+    return res;
+  }
+
+  /**
+   * Convert an integer message into a string.
+   */
+  _integerToString(msg) {
+    let res = '';
+    res += ':' + Math.ceil(msg.value).toString() + '\r\n';
     return res;
   }
 
@@ -265,4 +278,7 @@ export default class MessageParser {
     return '*';
   }
 
+  static get INTEGER() {
+    return ':';
+  }
 }
