@@ -14,7 +14,8 @@
         "url": "https://github.com/smokerbag/redmock.git"
     },
     "scripts": {
-        "test": "node node_modules/gulp/bin/gulp.js travisTest"
+        "test": "gulp travisTest",
+        "build": "gulp build"
     },
     "dependencies": {
         "debug": "2.2.0"
