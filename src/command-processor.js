@@ -37,6 +37,10 @@ export default class CommandProcessor {
         this._processSet(msg, socket);
         break;
       }
+      case (CommandProcessor.SETEX): {
+        this._processSetEx(msg, socket);
+        break;
+      }
       case (CommandProcessor.GET): {
         this._processGet(msg, socket);
         break;
@@ -71,6 +75,10 @@ export default class CommandProcessor {
                msg.value[0].type == '$' &&
                msg.value[0].value.toUpperCase() == CommandProcessor.SET) {
       commandType = CommandProcessor.SET;
+    } else if (msg.type == '*' && msg.length >= 4 &&
+               msg.value[0].type == '$' &&
+               msg.value[0].value.toUpperCase() == CommandProcessor.SETEX) {
+      commandType = CommandProcessor.SETEX;
     } else if (msg.type == '*' && msg.length == 2 &&
                msg.value[0].type == '$' &&
                msg.value[0].value.toUpperCase() == CommandProcessor.SELECT) {
@@ -227,6 +235,33 @@ export default class CommandProcessor {
     }
   }
 
+  /**
+   * Process SETEX command.
+   */
+  _processSetEx(msg, socket) {
+    debug('Transform SETEX into SET command');
+    const command = {
+      type: '*',
+      length: 4,
+      value: [
+        {
+          type: '$',
+          value: 'set',
+          length: 3
+        },
+        msg.value[1],
+        msg.value[2],
+        {
+          type: '$',
+          value: 'EX',
+          length: 2
+        },
+        msg.value[3]
+      ]
+    };
+    this._processSet(msg, socket);
+  }
+
   static get INFO() {
     return 'INFO';
   }
@@ -237,6 +272,10 @@ export default class CommandProcessor {
 
   static get SET() {
     return 'SET';
+  }
+
+  static get SETEX() {
+    return 'SETEX';
   }
 
   static get GET() {

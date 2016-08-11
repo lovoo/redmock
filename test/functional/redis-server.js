@@ -168,6 +168,8 @@ describe('RedisServer', () => {
       return redis.set('exists', 'exists', 'XX').should.eventually.equal(null);
     });
 
+    it('test', () => {
+      return redis.setex('foo', 'bar', 500).should.eventually.equal('OK');
+    });
   });
-
 });
