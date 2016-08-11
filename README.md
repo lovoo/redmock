@@ -1,9 +1,5 @@
 # RedMock
 
-[![Build Status](https://travis-ci.org/smokerbag/redmock.svg?branch=master)](https://travis-ci.org/smokerbag/redmock)
-[![Coverage Status](https://coveralls.io/repos/github/smokerbag/redmock/badge.svg?branch=master)](https://coveralls.io/github/smokerbag/redmock?branch=master)
-[![Dependency Status](https://david-dm.org/smokerbag/redmock.svg)](https://david-dm.org/smokerbag/redmock)
-
 Mock [Redis](http://redis.io) server for [Node](https://nodejs.org) unit tests.
 
 Requires Node version 5.7.0 or higher for the newest language features.
